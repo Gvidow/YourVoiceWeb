@@ -7,6 +7,7 @@ const workerOptions = {
 
 const btnStart = document.getElementById("record-start");
 const btnStop = document.getElementById("record-stop");
+const consoleWithQuestionText = document.getElementById("question-text");
 
 let ws = new CustomWebSocket();
 
@@ -18,7 +19,7 @@ navigator.mediaDevices.getUserMedia({audio: true, video: false})
         btnStart.addEventListener("click", (ev) => {
             console.log("record start");
             ws.newConnect("ws://localhost:8080", ()=>{console.log("Open new connect");},
-                ()=>{console.log("Close connect");}, (mes)=>{console.log(mes);}, (err)=>{alert(err);})
+                ()=>{console.log("Close connect");}, (mes)=>{consoleWithQuestionText.innerHTML=mes.data;}, (err)=>{alert(err);})
             mediaRecorder.start(100);
         });
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/asr"
 	ws "nhooyr.io/websocket"
 )
 
@@ -25,31 +25,45 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	ctxRead, cancelRead := context.WithTimeout(context.Background(), MaxTimeKeepConnection)
 	defer cancelRead()
 
-	var record []byte
-	for {
-		ms, b, err := conn.Read(ctxRead)
-		if err != nil {
-			log.Println(fmt.Errorf("mainHandle: read connection: %w", err))
-			break
-		}
-		if ms == ws.MessageText && string(b) == "DONE" {
-			break
-		}
-		record = append(record, b...)
-
-		log.Println(ms, len(b))
-	}
-	log.Printf("Размер полученной записи: %d", len(record))
-	file, err := os.Create("record.wav")
+	asrClient, err := asr.NewAutomaticSpeechRecognitionClient()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
-	defer file.Close()
-	n, err := file.Write(record)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(n)
+	asrClient.StartSpeechRecognition()
 
+	ch := asrClient.GetSendChan()
+	// var record []byte
+	go func() {
+		for {
+			ms, b, err := conn.Read(ctxRead)
+			if err != nil {
+				log.Println(fmt.Errorf("mainHandle: read connection: %w", err))
+				close(ch)
+				break
+			}
+			if ms == ws.MessageText && string(b) == "DONE" {
+				log.Println("Запись получена")
+				close(ch)
+				break
+			}
+			// record = append(record, b...)
+			ch <- b
+			// log.Println(ms, len(b))
+		}
+		// file, err := os.Create("record.wav")
+		// if err != nil {
+		// 	log.Println(err)
+		// }
+		// defer file.Close()
+		// file.Write(record)
+		// fmt.Println("lll", len(record))
+	}()
+	// log.Printf("Размер полученной записи: %d", len(record))
+	ctx := context.Background()
+	for text := range asrClient.GetRecvChan() {
+		// log.Println("H: ", text)
+		conn.Write(ctx, ws.MessageText, []byte(text))
+	}
 	log.Println("Close connection")
 }
