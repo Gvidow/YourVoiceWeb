@@ -17,7 +17,7 @@ const addr = "stt.api.cloud.yandex.net:443"
 type AutomaticSpeechRecognitionClient struct {
 	stt.Recognizer_RecognizeStreamingClient
 	sendChan        chan []byte
-	recvChan        chan string
+	recvChan        chan *Response
 	stateRecordChan chan struct{}
 }
 
@@ -25,7 +25,7 @@ func (asrc *AutomaticSpeechRecognitionClient) GetSendChan() chan<- []byte {
 	return asrc.sendChan
 }
 
-func (asrc *AutomaticSpeechRecognitionClient) GetRecvChan() <-chan string {
+func (asrc *AutomaticSpeechRecognitionClient) GetRecvChan() <-chan *Response {
 	return asrc.recvChan
 }
 
@@ -67,15 +67,13 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 			}
 			switch ev := res.Event.(type) {
 			case *stt.StreamingResponse_StatusCode:
-				fmt.Printf("Status code: %s\n", ev.StatusCode.CodeType)
-				asrc.recvChan <- "Status code"
+				log.Printf("Status code: %s\n", ev.StatusCode.CodeType)
+				// asrc.recvChan <- "Status code"
 			case *stt.StreamingResponse_FinalRefinement:
-				fmt.Println("Final Refinement")
-				s := ""
+				log.Println("Final Refinement")
 				if len(ev.FinalRefinement.GetNormalizedText().Alternatives) > 0 {
-					s = ev.FinalRefinement.GetNormalizedText().String()
+					asrc.recvChan <- &Response{Text: ev.FinalRefinement.GetNormalizedText().Alternatives[0].Text, Fix: true, Finish: false}
 				}
-				asrc.recvChan <- "FR" + s
 				select {
 				case <-asrc.stateRecordChan:
 					break loop
@@ -83,17 +81,15 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 					continue
 				}
 			case *stt.StreamingResponse_EouUpdate:
-				fmt.Println("EouUpdate")
-				asrc.recvChan <- "EouUpdate"
+				log.Println("EouUpdate")
 			case *stt.StreamingResponse_Partial:
-				fmt.Printf("Partial: LEN %d\n", len(ev.Partial.Alternatives))
+				log.Printf("Partial: LEN %d\n", len(ev.Partial.Alternatives))
 				if len(ev.Partial.Alternatives) > 0 {
-					asrc.recvChan <- ev.Partial.Alternatives[0].Text
+					asrc.recvChan <- &Response{Text: ev.Partial.Alternatives[0].Text, Fix: false, Finish: false}
 				}
 				// fmt.Println(ev)
 			case *stt.StreamingResponse_Final:
 				fmt.Println("Final")
-				asrc.recvChan <- "Final"
 				//break loop
 			}
 			time.Sleep(100 * time.Millisecond)
@@ -109,6 +105,7 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 		// 	}
 		// 	// fmt.Println(ev)
 		// }
+		asrc.recvChan <- &Response{Finish: true}
 		close(asrc.recvChan)
 	}()
 	return nil
@@ -128,7 +125,7 @@ func NewAutomaticSpeechRecognitionClient() (*AutomaticSpeechRecognitionClient, e
 	}
 	return &AutomaticSpeechRecognitionClient{Recognizer_RecognizeStreamingClient: res,
 		sendChan:        make(chan []byte),
-		recvChan:        make(chan string),
+		recvChan:        make(chan *Response),
 		stateRecordChan: make(chan struct{})}, nil
 
 }

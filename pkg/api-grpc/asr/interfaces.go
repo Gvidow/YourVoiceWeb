@@ -2,7 +2,7 @@ package asr
 
 type AutomaticSpeechRecognizer interface {
 	GetSendChan() chan<- []byte
-	GetRecvChan() <-chan string
+	GetRecvChan() <-chan *Response
 }
 
 // type AudioChunker interface {
