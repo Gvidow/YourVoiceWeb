@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
 	stt "github.com/yandex-cloud/go-genproto/yandex/cloud/ai/stt/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -111,14 +112,23 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 	return nil
 }
 
-func NewAutomaticSpeechRecognitionClient() (*AutomaticSpeechRecognitionClient, error) {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+func NewAutomaticSpeechRecognitionClient(cfg *cloud.CloudConfig) (*AutomaticSpeechRecognitionClient, error) {
+	iamToken, err := cfg.GetIAMToken()
+	if err != nil {
+		return nil, err
+	}
+	folderId, err := cfg.GetFolderId()
 	if err != nil {
 		return nil, err
 	}
 
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	if err != nil {
+		return nil, err
+	}
 	rc := stt.NewRecognizerClient(conn)
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "Authorization", "", "x-folder-id", "")
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "Authorization", "Bearer "+iamToken, "x-folder-id", folderId)
 	res, err := rc.RecognizeStreaming(ctx)
 	if err != nil {
 		return nil, err

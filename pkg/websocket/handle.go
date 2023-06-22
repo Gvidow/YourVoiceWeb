@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,16 +11,16 @@ import (
 	"unicode/utf8"
 
 	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/asr"
+	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
 	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/tts"
 	"github.com/gvidow/YourVoiceWeb/pkg/api-rest/gpt"
-	"golang.org/x/net/context"
 	ws "nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
 const MaxTimeKeepConnection time.Duration = 4*time.Minute + 50*time.Second
 
-func mainHandle(w http.ResponseWriter, r *http.Request) {
+func mainHandle(w http.ResponseWriter, r *http.Request, cfg *cloud.CloudConfig, tokenGPT string) {
 	r.Header.Del("Origin")
 	conn, err := ws.Accept(w, r, nil)
 	if err != nil {
@@ -31,7 +32,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	ctxRead, cancelRead := context.WithTimeout(context.Background(), MaxTimeKeepConnection)
 	defer cancelRead()
 
-	asrClient, err := asr.NewAutomaticSpeechRecognitionClient()
+	asrClient, err := asr.NewAutomaticSpeechRecognitionClient(cfg)
 	if err != nil {
 		log.Println(err)
 		return
@@ -89,12 +90,12 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("OTL")
 	}()
-	ttsClient, err := tts.NewTextToSpeechClient()
+	ttsClient, err := tts.NewTextToSpeechClient(cfg)
 	if err != nil {
 		log.Println(err)
 	}
 	go func() {
-		clientGPT := gpt.NewChatGPT("token")
+		clientGPT := gpt.NewChatGPT(tokenGPT)
 		chGPT := clientGPT.Ask(question)
 
 		ctx, ccc := context.WithTimeout(context.Background(), time.Hour)
@@ -117,6 +118,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		if len(delta.String()) > 0 {
 			ttsClient.GetSendChan() <- delta.String()
 		}
+		close(ttsClient.GetSendChan())
 		log.Println(answer.String())
 		log.Println("exit chatgpt")
 	}()

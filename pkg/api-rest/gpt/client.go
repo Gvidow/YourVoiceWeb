@@ -33,7 +33,7 @@ func (cgpt *ChatGPT) Ask(question string) <-chan string {
 			log.Println(err)
 			return
 		}
-		req.Header.Add("Authorization", "")
+		req.Header.Add("Authorization", "Bearer "+cgpt.token)
 		req.Header.Add("Content-Type", "application/json")
 		req.ContentLength = int64(len(strBodyRequest))
 		res, err := http.DefaultClient.Do(req)

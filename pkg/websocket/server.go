@@ -3,6 +3,8 @@ package websocket
 import (
 	"net"
 	"net/http"
+
+	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
 )
 
 type WebSocketServer struct {
@@ -11,10 +13,10 @@ type WebSocketServer struct {
 	serv *http.Server
 }
 
-func NewWebSocketServer(addr string) *WebSocketServer {
+func NewWebSocketServer(addr string, cfg *cloud.CloudConfig, tokenGPT string) *WebSocketServer {
 	return &WebSocketServer{
 		Addr: addr,
-		serv: &http.Server{Handler: http.HandlerFunc(mainHandle)},
+		serv: &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { mainHandle(w, r, cfg, tokenGPT) })},
 	}
 }
 
