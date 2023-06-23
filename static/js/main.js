@@ -27,7 +27,7 @@ navigator.mediaDevices.getUserMedia({audio: true, video: false})
             consoleWithQuestionText.innerHTML = "";
             consoleWithAnswerText.innerHTML = "";
             isQuestionReceived = false;
-            ws.newConnect("ws://localhost:8080", ()=>{console.log("Open new connect");},
+            ws.newConnect("ws://localhost:8080/ws", ()=>{console.log("Open new connect");},
                 ()=>{console.log("Close connect");}, (mes) => {
                     // consoleWithQuestionText.innerHTML=mes.data;
                     console.log(mes)

@@ -21,7 +21,6 @@ import (
 const MaxTimeKeepConnection time.Duration = 4*time.Minute + 50*time.Second
 
 func mainHandle(w http.ResponseWriter, r *http.Request, cfg *cloud.CloudConfig, tokenGPT string) {
-	r.Header.Del("Origin")
 	conn, err := ws.Accept(w, r, nil)
 	if err != nil {
 		log.Println(fmt.Errorf("mainHandle: Accept: %w", err))
@@ -57,17 +56,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request, cfg *cloud.CloudConfig, 
 			}
 			record = append(record, b...)
 			ch <- b
-			// log.Println(ms, len(b))
 		}
-		// file, err := os.Create("record.wav")
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		// defer file.Close()
-		// file.Write(record)
-		// fmt.Println("lll", len(record))
 	}()
-	// log.Printf("Размер полученной записи: %d", len(record))
 	ctx, fff := context.WithTimeout(context.Background(), time.Hour)
 	defer fff()
 	for res := range asrClient.GetRecvChan() {
@@ -75,7 +65,6 @@ func mainHandle(w http.ResponseWriter, r *http.Request, cfg *cloud.CloudConfig, 
 			question += res.Text
 		}
 		wsjson.Write(ctx, conn, res)
-		// conn.Write(ctx, ws.MessageText, []byte(text))
 	}
 	internalChan := make(chan struct{})
 	go func() {

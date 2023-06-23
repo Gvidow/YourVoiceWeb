@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -34,17 +35,27 @@ func main() {
 	}
 	defer cloudConfig.Stop()
 
-	//file server
-	dir := http.Dir(".")
-	h := http.FileServer(dir)
-	s := &http.Server{Addr: "localhost:8081", Handler: h}
-	go func() { log.Fatal(s.ListenAndServe()) }()
+	//server
+	serv := ws.NewWebSocketServer("", cloudConfig, tokenGPT)
 
-	//websocket server
-	serv := ws.NewWebSocketServer(addr, cloudConfig, tokenGPT)
+	servMux := http.NewServeMux()
 
-	if err := serv.Run(); err != nil {
+	mainPage, err := ioutil.ReadFile("index.html")
+	if err != nil {
 		log.Fatal(err)
 	}
-
+	servMux.HandleFunc("/main", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write(mainPage)
+		if err != nil {
+			log.Println(err)
+		}
+	}))
+	dir := http.Dir("static")
+	fs := http.FileServer(dir)
+	servMux.Handle("/static/", http.StripPrefix("/static/", fs))
+	servMux.Handle("/ws", serv)
+	servMux.HandleFunc("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/main", http.StatusFound) }))
+	if err = http.ListenAndServe(addr, servMux); err != nil {
+		log.Fatal(err)
+	}
 }

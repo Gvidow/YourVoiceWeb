@@ -28,3 +28,7 @@ func (wss *WebSocketServer) Run() error {
 	}
 	return wss.serv.Serve(wss.l)
 }
+
+func (wss *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	wss.serv.Handler.ServeHTTP(w, r)
+}
