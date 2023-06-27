@@ -1,33 +1,24 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 	ws "github.com/gvidow/YourVoiceWeb/pkg/websocket"
-	"go.uber.org/config"
 )
 
 func main() {
-	//read config
-	configFile := config.File("config.yaml")
-	cfg, err := config.NewYAML(configFile)
+	// read config
+	cfg, err := ReadAllConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	port := cfg.Get("server.port").String()
-	host := cfg.Get("server.host").String()
-	addr := host + ":" + port
-
-	folderId := cfg.Get("yandexCloud.folderId").String()
-	oAuthToken := cfg.Get("yandexCloud.OAuthToken").String()
-	tokenGPT := cfg.Get("gpt.token").String()
+	servCfg, cloudCfg, GPTCfg := GetServerConfig(cfg), GetYandexCloudConfig(cfg), GetChatGPTConfig(cfg)
 
 	//create auto update config for yandex cloud (for workin SpeecKit)
-	cloudConfig := cloud.NewCloudConfig(oAuthToken, folderId)
+	cloudConfig := cloud.NewCloudConfig(cloudCfg.oAuthToken, cloudCfg.folderId)
 
 	err = cloudConfig.SrartAutoUpdateCloudConfig()
 	if err != nil {
@@ -36,11 +27,11 @@ func main() {
 	defer cloudConfig.Stop()
 
 	//server
-	serv := ws.NewWebSocketServer("", cloudConfig, tokenGPT)
+	serv := ws.NewWebSocketServer("", cloudConfig, GPTCfg.token)
 
 	servMux := http.NewServeMux()
 
-	mainPage, err := ioutil.ReadFile("index.html")
+	mainPage, err := os.ReadFile("index.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +46,7 @@ func main() {
 	servMux.Handle("/static/", http.StripPrefix("/static/", fs))
 	servMux.Handle("/ws", serv)
 	servMux.HandleFunc("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/main", http.StatusFound) }))
-	if err = http.ListenAndServe(addr, servMux); err != nil {
+	if err = http.ListenAndServe(servCfg.host+":"+servCfg.port, servMux); err != nil {
 		log.Fatal(err)
 	}
 }

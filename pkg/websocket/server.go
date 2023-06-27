@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 )
 
 type WebSocketServer struct {

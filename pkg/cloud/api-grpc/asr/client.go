@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 	stt "github.com/yandex-cloud/go-genproto/yandex/cloud/ai/stt/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

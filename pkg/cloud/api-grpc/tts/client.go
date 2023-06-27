@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 	yatts "github.com/yandex-cloud/go-genproto/yandex/cloud/ai/tts/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

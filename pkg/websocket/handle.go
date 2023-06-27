@@ -10,10 +10,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/asr"
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/cloud"
-	"github.com/gvidow/YourVoiceWeb/pkg/api-grpc/tts"
-	"github.com/gvidow/YourVoiceWeb/pkg/api-rest/gpt"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud/api-grpc/asr"
+	"github.com/gvidow/YourVoiceWeb/pkg/cloud/api-grpc/tts"
+	"github.com/gvidow/YourVoiceWeb/pkg/gpt"
 	ws "nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
