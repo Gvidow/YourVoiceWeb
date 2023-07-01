@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	ws "github.com/gvidow/YourVoiceWeb/internal/websocket"
 	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
-	ws "github.com/gvidow/YourVoiceWeb/pkg/websocket"
 )
 
 func main() {

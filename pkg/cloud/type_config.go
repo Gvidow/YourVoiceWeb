@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	ErrorEmptyOAuthToken    = errors.New("error CloudConfig: OAuth token is empty")
-	ErrorEmptyFolderIdToken = errors.New("error CloudConfig: folder-id is empty")
+	ErrEmptyOAuthToken    = errors.New("error CloudConfig: OAuth token is empty")
+	ErrEmptyFolderIdToken = errors.New("error CloudConfig: folder-id is empty")
 )
 
 var (
-	ErrorTickerNotRunning     = errors.New("error CloudConfig: ticker: attempt to stop a ticker that is not running")
-	ErrorTickerAlreadyRunning = errors.New("error CloudConfig: ticker already started")
+	ErrTickerNotRunning     = errors.New("error CloudConfig: ticker: attempt to stop a ticker that is not running")
+	ErrTickerAlreadyRunning = errors.New("error CloudConfig: ticker already started")
 )
 
 const (
@@ -78,7 +78,7 @@ func (cc *CloudConfig) UpdateCloudConfig() error {
 
 func (cc *CloudConfig) SrartAutoUpdateCloudConfig() error {
 	if cc.ticker != nil {
-		return ErrorTickerAlreadyRunning
+		return ErrTickerAlreadyRunning
 	}
 	err := cc.UpdateCloudConfig()
 	if err != nil {
@@ -98,7 +98,7 @@ func (cc *CloudConfig) SrartAutoUpdateCloudConfig() error {
 
 func (cc *CloudConfig) GetFolderId() (string, error) {
 	if len(cc.folderId) == 0 {
-		return "", ErrorEmptyFolderIdToken
+		return "", ErrEmptyFolderIdToken
 	}
 	return cc.folderId, nil
 }
@@ -122,7 +122,7 @@ func (cc *CloudConfig) GetIAMToken() (string, error) {
 
 func (cc *CloudConfig) SetTime(time time.Duration) error {
 	if cc.ticker != nil {
-		return ErrorTickerAlreadyRunning
+		return ErrTickerAlreadyRunning
 	}
 	cc.deltaTime = time
 	return nil
@@ -130,7 +130,7 @@ func (cc *CloudConfig) SetTime(time time.Duration) error {
 
 func (cc *CloudConfig) Stop() error {
 	if cc.ticker == nil {
-		return ErrorTickerNotRunning
+		return ErrTickerNotRunning
 	}
 	cc.ticker.Stop()
 	cc.ticker = nil

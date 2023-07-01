@@ -2,7 +2,6 @@ package tts
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
@@ -38,20 +37,14 @@ func (ttsc *TextToSpeechClietn) Start() error {
 			c, err := ttsc.synthesizer.UtteranceSynthesis(ctx, &yatts.UtteranceSynthesisRequest{Utterance: &yatts.UtteranceSynthesisRequest_Text{Text: text}})
 			if err != nil {
 				log.Println(err)
-				return
+				continue
 			}
-			fmt.Println(4)
 			ttsc.clientChan <- c
-			fmt.Println(45)
-			log.Println("YES")
 		}
 		close(ttsc.clientChan)
 	}()
 	go func() {
-		fmt.Println(6)
 		for cc := range ttsc.clientChan {
-			fmt.Println(67)
-			log.Println("NO")
 			res, err := cc.Recv()
 			if err != nil {
 				log.Println(err)
@@ -80,8 +73,8 @@ func NewTextToSpeechClient(cfg *cloud.CloudConfig) (*TextToSpeechClietn, error) 
 	cl := yatts.NewSynthesizerClient(conn)
 	return &TextToSpeechClietn{
 		synthesizer: cl, recvChan: make(chan []byte),
-		sendChan:   make(chan string, 100),
-		clientChan: make(chan yatts.Synthesizer_UtteranceSynthesisClient),
+		sendChan:   make(chan string),
+		clientChan: make(chan yatts.Synthesizer_UtteranceSynthesisClient, 100),
 		cfg:        cfg,
 	}, nil
 }
