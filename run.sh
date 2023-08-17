@@ -1,3 +1,3 @@
 #!/bin/bash
-go build -o YourVoiceWeb cmd/*
-./YourVoiceWeb
+go build -o bin/YourVoiceWeb cmd/*
+./bin/YourVoiceWeb
