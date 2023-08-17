@@ -7,17 +7,17 @@ import (
 )
 
 const gptTmpl = `gpt:
-	token: {{.TokenGPT}}
+  token: {{.TokenGPT}}
 `
 
 const yandexCloudTmpl = `yandexCloud:
-	oAuthToken: {{.OAuth}}
-	folderId: {{.FolderID}}
+  oAuthToken: {{.OAuth}}
+  folderId: {{.FolderID}}
 `
 
 const serverTmpl = `server:
-	port: {{.Port}}
-	host: {{.Host}}
+  port: {{.Port}}
+  host: "{{.Host}}"
 `
 const (
 	path            = "configs"
