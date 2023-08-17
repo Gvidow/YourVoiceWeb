@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  app:
+    image: gvidoj/your_voice_web:latest
+    container_name: app
+    
+    environment:
+      HOST: ""
+      PORT: 8080
+      TOKEN_GPT: your_token
+      YANDEX_CLOUD_OAuth: your_OAuth_token
+      YANDEX_CLOUD_FOLDER_ID: your_folder_id
+
+    ports:
+      - 8080:8080
+
+    
