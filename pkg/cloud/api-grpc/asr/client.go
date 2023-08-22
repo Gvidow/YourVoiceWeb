@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const addr = "stt.api.cloud.yandex.net:443"
+var addr string = "stt.api.cloud.yandex.net:443"
 
 type AutomaticSpeechRecognitionClient struct {
 	stt.Recognizer_RecognizeStreamingClient
@@ -46,6 +46,8 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 		if err != nil {
 			log.Println(fmt.Errorf("StartSpeechRecognition: goroutin send chunk: send eou: %w", err))
 		}
+		err = asrc.CloseSend()
+		log.Println(err)
 		close(asrc.stateRecordChan)
 	}()
 	go func() {
@@ -55,21 +57,26 @@ func (asrc *AutomaticSpeechRecognitionClient) StartSpeechRecognition() error {
 			res, err := asrc.Recv()
 			if err != nil {
 				log.Println(fmt.Errorf("StartSpeechRecognition: goroutin recv text: recv: %w", err))
+				break
 			}
 			switch ev := res.Event.(type) {
 			case *stt.StreamingResponse_FinalRefinement:
 				if len(ev.FinalRefinement.GetNormalizedText().Alternatives) > 0 {
 					asrc.recvChan <- &Response{Text: ev.FinalRefinement.GetNormalizedText().Alternatives[0].Text, Fix: true, Finish: false}
 				}
-				select {
-				case <-asrc.stateRecordChan:
-					break loop
-				default:
-					continue
-				}
+				// select {
+				// case <-asrc.stateRecordChan:
+				// 	break loop
+				// default:
+				// 	continue
+				// }
 			case *stt.StreamingResponse_Partial:
 				if len(ev.Partial.Alternatives) > 0 {
 					asrc.recvChan <- &Response{Text: ev.Partial.Alternatives[0].Text, Fix: false, Finish: false}
+				}
+			case *stt.StreamingResponse_StatusCode:
+				if ev.StatusCode.GetCodeType() == stt.CodeType_CLOSED {
+					break loop
 				}
 			}
 			time.Sleep(100 * time.Millisecond)
