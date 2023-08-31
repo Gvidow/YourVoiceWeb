@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const url = "https://api.openai.com/v1/chat/completions"
+const url = "http://localhost:9091/gpt" //"https://api.openai.com/v1/chat/completions"
 
 type ChatGPT struct {
 	token string

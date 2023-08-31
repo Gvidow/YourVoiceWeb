@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  host: ""
+  mode: debug
+
+app:
+  yandexCloud:
+    OAuthToken: ""
+    folderId: ""
+
+  gpt:
+    token: ""
+
+mongodb:
+  nameDB: YourVoiceWeb
+  user: root
+  password: love
+  host: localhost
+  port: 27017

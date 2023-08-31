@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"go.uber.org/config"
 )
 
 var (
@@ -28,6 +30,8 @@ const (
 
 const url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 
+const configName = "app.yandexCloud"
+
 type token struct {
 	IamToken  string
 	ExpiresAt time.Time
@@ -43,10 +47,11 @@ type CloudConfig struct {
 	expired    time.Time
 }
 
-func NewCloudConfig(oAuthToken, folderId string) *CloudConfig {
+func NewCloudConfig(cfg *config.YAML) *CloudConfig {
+	val := cfg.Get(configName)
 	return &CloudConfig{
-		oAuthToken: oAuthToken,
-		folderId:   folderId,
+		oAuthToken: val.Get("OAuthToken").String(),
+		folderId:   val.Get("folderId").String(),
 		mu:         &sync.RWMutex{},
 		ticker:     nil,
 		deltaTime:  timeBetweenUpdates,
@@ -104,19 +109,21 @@ func (cc *CloudConfig) GetFolderId() (string, error) {
 }
 
 func (cc *CloudConfig) GetIAMToken() (string, error) {
-	cc.mu.RLock()
-	token := cc.iamToken
-	exp := cc.expired
-	cc.mu.RUnlock()
-	if time.Now().Add(timeLimitBeforeExpires).After(exp) {
-		err := cc.UpdateCloudConfig()
-		if err != nil {
-			return "", fmt.Errorf("error: GetIAMToken UpdateCloudConfig: %w", err)
-		}
-		cc.mu.RLock()
-		token = cc.iamToken
-		cc.mu.RUnlock()
-	}
+	// cc.mu.RLock()
+	// token := cc.iamToken
+	// exp := cc.expired
+	// cc.mu.RUnlock()
+	// if time.Now().Add(timeLimitBeforeExpires).After(exp) {
+	// 	err := cc.UpdateCloudConfig()
+	// 	if err != nil {
+	// 		return "", fmt.Errorf("error: GetIAMToken UpdateCloudConfig: %w", err)
+	// 	}
+	// 	cc.mu.RLock()
+	// 	token = cc.iamToken
+	// 	cc.mu.RUnlock()
+	// }
+	// fmt.Println(token)
+	token := ""
 	return token, nil
 }
 

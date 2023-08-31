@@ -7,11 +7,11 @@ import (
 	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 	yatts "github.com/yandex-cloud/go-genproto/yandex/cloud/ai/tts/v3"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
-const addr = "tts.api.cloud.yandex.net:443"
+var addr string = "localhost:9093" //"tts.api.cloud.yandex.net:443"
 
 type TextToSpeechClietn struct {
 	synthesizer yatts.SynthesizerClient
@@ -66,7 +66,7 @@ func (ttsc *TextToSpeechClietn) GetRecvChan() <-chan []byte {
 }
 
 func NewTextToSpeechClient(cfg *cloud.CloudConfig) (*TextToSpeechClietn, error) {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials())) //credentials.NewClientTLSFromCert(nil, "")))
 	if err != nil {
 		return nil, err
 	}

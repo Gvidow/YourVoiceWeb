@@ -9,11 +9,11 @@ import (
 	"github.com/gvidow/YourVoiceWeb/pkg/cloud"
 	stt "github.com/yandex-cloud/go-genproto/yandex/cloud/ai/stt/v3"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
-var addr string = "stt.api.cloud.yandex.net:443"
+var addr string = "localhost:9092" //"stt.api.cloud.yandex.net:443"
 
 type AutomaticSpeechRecognitionClient struct {
 	stt.Recognizer_RecognizeStreamingClient
@@ -97,7 +97,7 @@ func NewAutomaticSpeechRecognitionClient(cfg *cloud.CloudConfig) (*AutomaticSpee
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials())) //credentials.NewClientTLSFromCert(nil, "")))
 	if err != nil {
 		return nil, err
 	}
