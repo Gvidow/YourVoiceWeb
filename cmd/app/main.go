@@ -9,6 +9,7 @@ import (
 
 	"github.com/gvidow/YourVoiceWeb/internal/pkg/repository/chat"
 	"github.com/gvidow/YourVoiceWeb/internal/pkg/service"
+	"github.com/gvidow/YourVoiceWeb/internal/pkg/websocket"
 	"github.com/gvidow/YourVoiceWeb/internal/routing"
 	"github.com/gvidow/YourVoiceWeb/internal/usecase"
 	"github.com/gvidow/YourVoiceWeb/logger"
@@ -58,7 +59,9 @@ func main() {
 	// }
 	// defer cloudConfig.Stop()
 
-	s := service.New(log, u, tmpl)
+	wsService := websocket.NewWebSocketService(log)
+
+	s := service.New(log, u, wsService, tmpl)
 
 	r := routing.New(cfg, log)
 	r.ProduceRouting(s)
